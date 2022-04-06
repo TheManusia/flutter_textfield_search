@@ -272,10 +272,10 @@ class _TextFieldSearchState extends State<TextFieldSearch> {
   }
 
   Widget? _listViewContainer(context) {
-    if (itemsFound == true && filteredList!.length > 0 ||
-        itemsFound == false && widget.controller.text.length > 0) {
-      double _height =
-          itemsFound == true && filteredList!.length > 1 ? 110 : 55;
+    if (itemsFound == true && filteredList!.length > 0 || itemsFound == false && widget.controller.text.length > 0) {
+      double _height = itemsFound == true && filteredList!.length > 1
+          ? (filteredList!.length > 4 ? 55 * 4 : filteredList!.length * 55)
+          : 55;
       return Container(
         height: _height,
         child: _listViewBuilder(context),
@@ -304,7 +304,9 @@ class _TextFieldSearchState extends State<TextFieldSearch> {
                         maxWidth: screenWidth,
                         minHeight: 0,
                         // max height set to 150
-                        maxHeight: itemsFound == true ? 110 : 55,
+                        maxHeight: itemsFound == true && filteredList!.length > 1
+                            ? (filteredList!.length > 4 ? 55 * 4 : filteredList!.length * 55)
+                            : 55,
                       ),
                       child: loading
                           ? _loadingIndicator()
