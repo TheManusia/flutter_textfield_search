@@ -27,6 +27,9 @@ class TextFieldSearch extends StatefulWidget {
   /// The minimum length of characters to be entered into the TextField before executing a search
   final int minStringLength;
 
+  /// Return the value of TextField
+  final Function? onChanged;
+
   /// Creates a TextFieldSearch for displaying selected elements and retrieving a selected element
   const TextFieldSearch(
       {Key? key,
@@ -37,7 +40,8 @@ class TextFieldSearch extends StatefulWidget {
       this.future,
       this.getSelectedValue,
       this.decoration,
-      this.minStringLength = 2})
+      this.minStringLength = 2,
+      this.onChanged})
       : super(key: key);
 
   @override
@@ -324,6 +328,8 @@ class _TextFieldSearchState extends State<TextFieldSearch> {
         decoration: widget.decoration,
         style: widget.textStyle,
         onChanged: (String value) {
+          if (widget.onChanged != null)
+            widget.onChanged!(value);
           // every time we make a change to the input, update the list
           _debouncer.run(() {
             setState(() {
