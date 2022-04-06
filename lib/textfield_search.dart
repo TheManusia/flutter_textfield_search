@@ -5,8 +5,9 @@ class TextFieldSearch extends StatefulWidget {
   /// A default list of values that can be used for an initial list of elements to select from
   final List? initialList;
 
-  /// A string used for display of the selectable elements
-  final String label;
+  /// (Deprecated use [decoration] instead) A string used for display of the selectable elements
+  @Deprecated('use [decoration] instead')
+  final String? label;
 
   /// A controller for an editable text field
   final TextEditingController controller;
@@ -30,7 +31,7 @@ class TextFieldSearch extends StatefulWidget {
   const TextFieldSearch(
       {Key? key,
       this.initialList,
-      required this.label,
+      this.label,
       required this.controller,
       this.textStyle,
       this.future,
@@ -320,9 +321,7 @@ class _TextFieldSearchState extends State<TextFieldSearch> {
       child: TextField(
         controller: widget.controller,
         focusNode: this._focusNode,
-        decoration: widget.decoration != null
-            ? widget.decoration
-            : InputDecoration(labelText: widget.label),
+        decoration: widget.decoration,
         style: widget.textStyle,
         onChanged: (String value) {
           // every time we make a change to the input, update the list
