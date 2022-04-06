@@ -5,8 +5,8 @@ class TextFieldSearch extends StatefulWidget {
   /// A default list of values that can be used for an initial list of elements to select from
   final List? initialList;
 
-  /// (Deprecated use [decoration] instead) A string used for display of the selectable elements
-  @Deprecated('use [decoration] instead')
+  /// Deprecated use [decoration.hintText] instead
+  @Deprecated('use [decoration.hintText] instead')
   final String? label;
 
   /// A controller for an editable text field
@@ -34,7 +34,7 @@ class TextFieldSearch extends StatefulWidget {
   const TextFieldSearch(
       {Key? key,
       this.initialList,
-      this.label,
+      @Deprecated('use [decoration.hintText] instead') this.label,
       required this.controller,
       this.textStyle,
       this.future,
