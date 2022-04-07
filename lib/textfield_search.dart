@@ -193,31 +193,35 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
     return ListView.builder(
       itemCount: filteredList!.length,
       itemBuilder: (context, i) {
-        return GestureDetector(
-          onTap: () {
-            // set the controller value to what was selected
-            setState(() {
-              // if we have a label property, and getSelectedValue function
-              // send getSelectedValue to parent widget using the label property
-              if (widget.getSelectedValue != null) {
-                widget.controller.text = widget.itemLabel(filteredList![i]);
-                widget.getSelectedValue!(filteredList![i]);
-              } else {
-                widget.controller.text = widget.itemLabel(filteredList![i]);
-              }
-            });
-            // reset the list so it's empty and not visible
-            resetList();
-            // remove the focus node so we aren't editing the text
-            FocusScope.of(context).unfocus();
-          },
-          child: widget.itemBuilder != null
-              ? widget.itemBuilder!(filteredList![i])
-              : ListTile(
-                  title: Text(
-                    widget.itemLabel(filteredList![i]),
-                  ),
-                ),
+        return StatefulBuilder(
+          builder: (context, updateState) {
+            return InkWell(
+              onTap: () {
+                // set the controller value to what was selected
+                setState(() {
+                  // if we have a label property, and getSelectedValue function
+                  // send getSelectedValue to parent widget using the label property
+                  if (widget.getSelectedValue != null) {
+                    widget.controller.text = widget.itemLabel(filteredList![i]);
+                    widget.getSelectedValue!(filteredList![i]);
+                  } else {
+                    widget.controller.text = widget.itemLabel(filteredList![i]);
+                  }
+                });
+                // reset the list so it's empty and not visible
+                resetList();
+                // remove the focus node so we aren't editing the text
+                FocusScope.of(context).unfocus();
+              },
+              child: widget.itemBuilder != null
+                  ? (widget.itemBuilder!(filteredList![i]))
+                  : ListTile(
+                      title: Text(
+                        widget.itemLabel(filteredList![i]),
+                      ),
+                    ),
+            );
+          }
         );
       },
       padding: EdgeInsets.zero,
