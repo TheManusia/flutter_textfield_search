@@ -6,6 +6,8 @@ typedef ItemBuilder<T> = Widget Function(T item);
 
 typedef ItemLabel<T> = String Function(T item);
 
+typedef LoadingBuilder = Widget Function();
+
 typedef FutureData<T> = Future<List<T>> Function(String);
 
 class TextFieldSearch<T> extends StatefulWidget {
@@ -43,6 +45,9 @@ class TextFieldSearch<T> extends StatefulWidget {
   /// Used for customizing the display of each list item with custom item
   final ItemBuilder<T>? itemBuilder;
 
+  /// Used for customizing the display of the loading indicator
+  final LoadingBuilder? loadingBuilder;
+
   /// Creates a TextFieldSearch for displaying selected elements and retrieving a selected element
   const TextFieldSearch({
     Key? key,
@@ -57,6 +62,7 @@ class TextFieldSearch<T> extends StatefulWidget {
     this.onChanged,
     required this.itemLabel,
     this.itemBuilder,
+    this.loadingBuilder,
   })  : assert(initialList != null || future != null),
         super(key: key);
 
@@ -229,6 +235,8 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
 
   /// A default loading indicator to display when executing a Future
   Widget _loadingIndicator() {
+    if (widget.loadingBuilder != null)
+      return widget.loadingBuilder!();
     return Container(
       width: 50,
       height: 50,
