@@ -17,11 +17,8 @@ class TextFieldSearch<T> extends StatefulWidget {
   /// A controller for an editable text field
   final TextEditingController controller;
 
-  /// Use [initialList] instead
-  ///
-  /// Will add async feature in the future
-  @Deprecated('Use [initialList] instead')
-  final Function? future;
+  /// An optional future or async function that should return a list of selectable elements
+  final Future<List<T>> Function(String)? future;
 
   /// The value selected on tap of an element within the list
   final Function? getSelectedValue;
@@ -51,7 +48,7 @@ class TextFieldSearch<T> extends StatefulWidget {
     @Deprecated('Use [decoration.hintText] instead') this.label,
     required this.controller,
     this.textStyle,
-    @Deprecated('Use [initialList] instead') this.future,
+    this.future,
     this.getSelectedValue,
     this.decoration,
     this.minStringLength = 2,
@@ -70,6 +67,7 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
   late OverlayEntry _overlayEntry;
   final LayerLink _layerLink = LayerLink();
   List<T>? filteredList = <T>[];
+  bool hasFuture = false;
   bool loading = false;
   final _debouncer = Debouncer(milliseconds: 1000);
   bool? itemsFound;
@@ -125,6 +123,17 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
 
   void initState() {
     super.initState();
+
+    // throw error if we don't have an initial list or a future
+    if (widget.initialList == null && widget.future == null) {
+      throw ('Error: Missing required initial list or future that returns list');
+    }
+    if (widget.future != null) {
+      setState(() {
+        hasFuture = true;
+      });
+    }
+
     // add event listener to the focus node and only give an overlay if an entry
     // has focus and insert the overlay into Overlay context otherwise remove it
     _focusNode.addListener(() {
@@ -193,36 +202,34 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
     return ListView.builder(
       itemCount: filteredList!.length,
       itemBuilder: (context, i) {
-        return StatefulBuilder(
-          builder: (context, updateState) {
-            return InkWell(
-              onTap: () {
-                // set the controller value to what was selected
-                setState(() {
-                  // if we have a label property, and getSelectedValue function
-                  // send getSelectedValue to parent widget using the label property
-                  if (widget.getSelectedValue != null) {
-                    widget.controller.text = widget.itemLabel(filteredList![i]);
-                    widget.getSelectedValue!(filteredList![i]);
-                  } else {
-                    widget.controller.text = widget.itemLabel(filteredList![i]);
-                  }
-                });
-                // reset the list so it's empty and not visible
-                resetList();
-                // remove the focus node so we aren't editing the text
-                FocusScope.of(context).unfocus();
-              },
-              child: widget.itemBuilder != null
-                  ? (widget.itemBuilder!(filteredList![i]))
-                  : ListTile(
-                      title: Text(
-                        widget.itemLabel(filteredList![i]),
-                      ),
+        return StatefulBuilder(builder: (context, updateState) {
+          return InkWell(
+            onTap: () {
+              // set the controller value to what was selected
+              setState(() {
+                // if we have a label property, and getSelectedValue function
+                // send getSelectedValue to parent widget using the label property
+                if (widget.getSelectedValue != null) {
+                  widget.controller.text = widget.itemLabel(filteredList![i]);
+                  widget.getSelectedValue!(filteredList![i]);
+                } else {
+                  widget.controller.text = widget.itemLabel(filteredList![i]);
+                }
+              });
+              // reset the list so it's empty and not visible
+              resetList();
+              // remove the focus node so we aren't editing the text
+              FocusScope.of(context).unfocus();
+            },
+            child: widget.itemBuilder != null
+                ? (widget.itemBuilder!(filteredList![i]))
+                : ListTile(
+                    title: Text(
+                      widget.itemLabel(filteredList![i]),
                     ),
-            );
-          }
-        );
+                  ),
+          );
+        });
       },
       padding: EdgeInsets.zero,
       shrinkWrap: true,
@@ -300,12 +307,32 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
           // every time we make a change to the input, update the list
           _debouncer.run(() {
             setState(() {
-              updateList();
+              if (hasFuture) {
+                updateGetItems();
+              } else {
+                updateList();
+              }
             });
           });
         },
       ),
     );
+  }
+
+  void updateGetItems() {
+    // mark that the overlay widget needs to be rebuilt
+    // so loader can show
+    this._overlayEntry.markNeedsBuild();
+    if (widget.controller.text.length > widget.minStringLength)  {
+      this.setLoading();
+      widget.future!(widget.controller.text).then((value) {
+          // helper function to set tempList and other state props
+          this.resetState(value);
+      });
+    } else {
+      // reset the list if we ever have less than 2 characters
+      resetList();
+    }
   }
 }
 
