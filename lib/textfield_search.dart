@@ -6,6 +6,8 @@ typedef ItemBuilder<T> = Widget Function(T item);
 
 typedef ItemLabel<T> = String Function(T item);
 
+typedef FutureData<T> = Future<List<T>> Function(String);
+
 class TextFieldSearch<T> extends StatefulWidget {
   /// A default list of values that can be used for an initial list of elements to select from
   final List<T>? initialList;
@@ -18,7 +20,7 @@ class TextFieldSearch<T> extends StatefulWidget {
   final TextEditingController controller;
 
   /// An optional future or async function that should return a list of selectable elements
-  final Future<List<T>> Function(String)? future;
+  final FutureData<T>? future;
 
   /// The value selected on tap of an element within the list
   final Function? getSelectedValue;
@@ -55,7 +57,7 @@ class TextFieldSearch<T> extends StatefulWidget {
     this.onChanged,
     required this.itemLabel,
     this.itemBuilder,
-  })  : assert(initialList != null),
+  })  : assert(initialList != null || future != null),
         super(key: key);
 
   @override
@@ -124,10 +126,6 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
   void initState() {
     super.initState();
 
-    // throw error if we don't have an initial list or a future
-    if (widget.initialList == null && widget.future == null) {
-      throw ('Error: Missing required initial list or future that returns list');
-    }
     if (widget.future != null) {
       setState(() {
         hasFuture = true;
@@ -323,11 +321,11 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
     // mark that the overlay widget needs to be rebuilt
     // so loader can show
     this._overlayEntry.markNeedsBuild();
-    if (widget.controller.text.length > widget.minStringLength)  {
+    if (widget.controller.text.length > widget.minStringLength) {
       this.setLoading();
       widget.future!(widget.controller.text).then((value) {
-          // helper function to set tempList and other state props
-          this.resetState(value);
+        // helper function to set tempList and other state props
+        this.resetState(value);
       });
     } else {
       // reset the list if we ever have less than 2 characters
