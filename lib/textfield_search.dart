@@ -250,9 +250,6 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
 
   Widget? _listViewContainer(context) {
     if (itemsFound == true && filteredList!.length > 0 || itemsFound == false && widget.controller.text.length > 0) {
-      double _height = itemsFound == true && filteredList!.length > 1
-          ? (filteredList!.length > 4 ? 55 * 4 : filteredList!.length * 55)
-          : 55;
       return Container(
         height: _height,
         child: _listViewBuilder(context),
@@ -261,34 +258,49 @@ class _TextFieldSearchState<T> extends State<TextFieldSearch<T>> {
     return null;
   }
 
+  // height set to 55 each item, max item is 4
+  double get _height => itemsFound == true && filteredList!.length > 1
+      ? (filteredList!.length > 4 ? 55 * 4 : filteredList!.length * 55)
+      : 55;
+
   OverlayEntry _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     Size overlaySize = renderBox.size;
     Size screenSize = MediaQuery.of(context).size;
     double screenWidth = screenSize.width;
     return OverlayEntry(
-      builder: (context) => Positioned(
-        width: overlaySize.width,
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          showWhenUnlinked: false,
-          offset: Offset(0.0, overlaySize.height + 5.0),
-          child: Material(
-            elevation: 4.0,
-            child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: screenWidth,
-                  maxWidth: screenWidth,
-                  minHeight: 0,
-                  // max height set to 150
-                  maxHeight: itemsFound == true && filteredList!.length > 1
-                      ? (filteredList!.length > 4 ? 55 * 4 : filteredList!.length * 55)
-                      : 55,
-                ),
-                child: loading ? _loadingIndicator() : _listViewContainer(context)),
+      builder: (context) {
+        // get position of current widget
+        Offset position = renderBox.localToGlobal(Offset.zero);
+
+        // y position of current widget set to renderBox.size.height + 15,
+        // if current widget position on 80% of screen height,
+        // set y position to 0 - overlaySize.height - 15.0 - _height + 55
+        // 15 is margin of overlay, 55 is height of each item
+        Offset overlayPosition = position.dy > screenSize.height * 0.8
+            ? Offset(0.0, 0 - overlaySize.height - 15.0 - _height + 55)
+            : Offset(0.0, overlaySize.height + 5.0);
+
+        return Positioned(
+          width: overlaySize.width,
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: overlayPosition,
+            child: Material(
+              elevation: 4.0,
+              child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: screenWidth,
+                    maxWidth: screenWidth,
+                    minHeight: 0,
+                    maxHeight: _height,
+                  ),
+                  child: loading ? _loadingIndicator() : _listViewContainer(context)),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
